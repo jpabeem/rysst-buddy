@@ -5,6 +5,9 @@
   "main": "index.js",
   "author": "Jeroen",
   "license": "MIT",
+  "scripts": {
+    "start": "index.js"
+  },
   "dependencies": {
     "axios": "^0.18.0",
     "dotenv": "^5.0.1",
