@@ -1,0 +1,18 @@
+{
+  "name": "RysstBuddy",
+  "version": "1.0.0",
+  "description": "Your buddy for RYSST related tasks!",
+  "main": "index.js",
+  "author": "Jeroen",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^0.18.0",
+    "dotenv": "^5.0.1",
+    "express": "^4.16.3",
+    "node-emoji": "^1.8.1",
+    "node-schedule": "^1.3.0",
+    "node-telegram-bot-api": "^0.30.0",
+    "puppeteer": "^1.4.0",
+    "rimraf": "^2.6.2"
+  }
+}
