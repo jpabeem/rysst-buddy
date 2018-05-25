@@ -18,18 +18,13 @@ const bot = new Bot(token, {
 const myScrumTeamJob = new MyScrumTeamJob();
 
 console.log('Bot server started...');
-console.log(`Debug mode enabled: ${process.env.DEBUG_MODE}`);
+
 /*
     Listen to Telegram user events.
 */
 bot.onText(/\/start$/, (msg, match) => {
-    // 'msg' is the received Message from Telegram
-    // 'match' is the result of executing the regexp above on the text content
-    // of the message
-
     const chatId = msg.chat.id;
     const help = emoji.get("question");
-    // send back the matched "whatever" to the chat
     bot.sendMessage(chatId, `Welcome! Enjoy your usage of RysstBuddy.\nNeed help${help} Try the /help command.`);
 });
 
@@ -37,7 +32,6 @@ bot.onText(/\/overview$/, async (msg, match) => {
     const chatId = msg.chat.id;
     const camera = emoji.get("camera");
     const image = await (myScrumTeamJob.getMyScrumTeamOverview(msg));
-    bot.sendMessage(chatId, `Puppeteer event! ${camera}`);
     bot.sendPhoto(msg.chat.id, image);
 });
 
@@ -60,7 +54,6 @@ bot.onText(/\/sprint$/, async (msg, match) => {
     const chatId = msg.chat.id;
     const camera = emoji.get("camera");
     const imagePath = await (myScrumTeamJob.getMyScrumTeamSprintHours(msg));
-    bot.sendMessage(chatId, `Puppeteer event! ${camera}`);
     bot.sendPhoto(msg.chat.id, imagePath);
 });
 
@@ -95,7 +88,6 @@ bot.onText(/\/planning ?(.+)?/, async (msg, match) => {
     }
 
     const imagePath = await (myScrumTeamJob.getMyScrumTeamSprintPlanning(msg, planningOption, planningAmount));
-    bot.sendMessage(chatId, `Puppeteer event!`);
     bot.sendChatAction(chatId, 'upload_photo');
     bot.sendPhoto(chatId, imagePath);
 });
@@ -125,6 +117,21 @@ event.emitter.on('puppeteerEvent', async (update) => {
     console.log("Puppeteer event fired!");
 });
 
+event.emitter.on('weeklyUpdateEvent', async (update) => {
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    const info = emoji.get("information_source");
+
+    let openHours = await (myScrumTeamJob.checkMyScrumTeamHours(msg));
+
+    if (openHours === 1) {
+        bot.sendMessage(chatId, `${info} You have ${openHours} open workday in MyScrumTeam for this week.`);
+    } else if (openHours > 1) {
+        bot.sendMessage(chatId, `${info} You have ${openHours} open workdays in MyScrumTeam for this week.`);
+    } else {
+        bot.sendMessage(chatId, `${info} You have no open workdays in MyScrumTeam for this week.`);
+    }
+});
+
 event.emitter.on('weeklyCleanupEvent', async () => {
     // clear the ./screenshots folder completely
     rimraf('./screenshots/*', () => {
@@ -132,8 +139,3 @@ event.emitter.on('weeklyCleanupEvent', async () => {
     });
 });
 
-event.emitter.on('weeklyUpdateEvent', async (update) => {
-    let updates = await fetchMyScrumTeamUpdates();
-    message += updates;
-    tellOurChannel(message);
-});
