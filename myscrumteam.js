@@ -17,7 +17,10 @@ class MyScrumTeamJob {
    */
   async getMyScrumTeamOverview(message) {
     const browser = await puppeteer.launch({
-      headless: true
+      headless: true,
+      args: [
+        '--disable-setuid-sandbox'
+      ]
     });
     const page = await browser.newPage();
     const date = new Date().getTime();
@@ -44,7 +47,10 @@ class MyScrumTeamJob {
    */
   async getMyScrumTeamSprintPlanning(message, planningOption, planningAmount) {
     const browser = await puppeteer.launch({
-      headless: true
+      headless: true,
+      args: [
+        '--disable-setuid-sandbox'
+      ]
     });
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
@@ -62,7 +68,7 @@ class MyScrumTeamJob {
       console.error("Unhandled Rejection at: Promise", p, "reason:", reason);
       browser.close();
     });
-  
+
     switch (planningOption) {
       case "day":
         await page.click(DAY_SELECTOR);
@@ -80,7 +86,7 @@ class MyScrumTeamJob {
       if (planningAmount > 0) {
         await page.click(NEXT_SELECTOR);
         await page.waitFor(500);
-      }else {
+      } else {
         await page.click(PREVIOUS_SELECTOR);
         await page.waitFor(500);
       }
@@ -106,7 +112,10 @@ class MyScrumTeamJob {
    */
   async getMyScrumTeamSprintHours(message) {
     const browser = await puppeteer.launch({
-      headless: true
+      headless: true,
+      args: [
+        '--disable-setuid-sandbox'
+      ]
     });
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
@@ -133,7 +142,10 @@ class MyScrumTeamJob {
    */
   async checkMyScrumTeamHours(message) {
     const browser = await puppeteer.launch({
-      headless: true
+      headless: true,
+      args: [
+        '--disable-setuid-sandbox'
+      ]
     });
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
@@ -157,7 +169,7 @@ class MyScrumTeamJob {
     });
 
     let uncheckedAmount = content.reduce((total, current) => {
-      return current === uncheckedColor ? total += 1: total;
+      return current === uncheckedColor ? total += 1 : total;
     }, 0);
 
     return uncheckedAmount;
@@ -167,7 +179,7 @@ class MyScrumTeamJob {
     await page.evaluate(() => {
       let dom = document.querySelector('body > div.app.header-blue.layout-fixed-header > div.sidebar-panel.offscreen-left.ps-container > nav > ul > li.menu-profile > div > span');
       dom.innerHTML = "RysstBuddy";
-   });
+    });
   }
 
   /**
