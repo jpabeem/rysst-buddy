@@ -18,7 +18,7 @@ const bot = new Bot(token, {
 const myScrumTeamJob = new MyScrumTeamJob();
 
 console.log('Bot server started...');
-
+console.log(`Debug mode enabled: ${process.env.DEBUG_MODE}`);
 /*
     Listen to Telegram user events.
 */
