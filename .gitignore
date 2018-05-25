@@ -1,4 +1,9 @@
 .env
 node_modules/
-screenshots/
 yarn.lock
+
+# exclude files within screenshot directory
+screenshots/*
+
+# keep screenshot directory only
+!screenshots/.gitkeep 
