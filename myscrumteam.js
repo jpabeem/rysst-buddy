@@ -19,7 +19,8 @@ class MyScrumTeamJob {
     const browser = await puppeteer.launch({
       headless: true,
       args: [
-        '--disable-setuid-sandbox'
+        '--disable-setuid-sandbox',
+        '--no-sandbox'
       ]
     });
     const page = await browser.newPage();
@@ -49,7 +50,8 @@ class MyScrumTeamJob {
     const browser = await puppeteer.launch({
       headless: true,
       args: [
-        '--disable-setuid-sandbox'
+        '--disable-setuid-sandbox',
+        '--no-sandbox'
       ]
     });
     const page = await browser.newPage();
@@ -114,7 +116,8 @@ class MyScrumTeamJob {
     const browser = await puppeteer.launch({
       headless: true,
       args: [
-        '--disable-setuid-sandbox'
+        '--disable-setuid-sandbox',
+        '--no-sandbox'
       ]
     });
     const page = await browser.newPage();
@@ -144,7 +147,8 @@ class MyScrumTeamJob {
     const browser = await puppeteer.launch({
       headless: true,
       args: [
-        '--disable-setuid-sandbox'
+        '--disable-setuid-sandbox',
+        '--no-sandbox'
       ]
     });
     const page = await browser.newPage();
