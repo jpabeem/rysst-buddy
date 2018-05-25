@@ -118,7 +118,6 @@ if (Boolean(process.env.DEBUG_MODE) === true) {
     });
 }
 
-
 /*
     Listen to emitted events.
 */
