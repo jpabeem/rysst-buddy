@@ -112,7 +112,7 @@ function unsupportedParameterError(chatId, parameter, suggestion) {
     });
 }
 
-if (process.env.DEBUG_MODE === true) {
+if (process.env.DEBUG_MODE == true) {
     bot.on('message', (msg) => {
         const chatId = msg.chat.id;
         // send a message to the chat acknowledging receipt of their message
