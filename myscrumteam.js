@@ -207,11 +207,11 @@ class MyScrumTeamJob {
       waitUntil: "domcontentloaded"
     });
 
-    await page.click(USERNAME_SELECTOR);
-    await page.keyboard.type(this.username);
+    await page.waitForSelector(USERNAME_SELECTOR);
+    await page.type(USERNAME_SELECTOR, this.username);
 
-    await page.click(PASSWORD_SELECTOR);
-    await page.keyboard.type(this.password);
+    await page.waitForSelector(PASSWORD_SELECTOR);
+    await page.type(PASSWORD_SELECTOR, this.password);
 
     await page.click(BUTTON_SELECTOR);
 
