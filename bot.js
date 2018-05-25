@@ -44,10 +44,7 @@ bot.onText(/\/overview$/, async (msg, match) => {
 bot.onText(/\/check$/, async (msg, match) => {
     const chatId = msg.chat.id;
     const info = emoji.get("information_source");
-    // const camera = emoji.get("camera");
-    // const image = await (myScrumTeamJob.getMyScrumTeamOverview(msg));
-    // bot.sendMessage(chatId, `Puppeteer event! ${camera}`);
-    // bot.sendPhoto(msg.chat.id, image);
+
     let openHours = await (myScrumTeamJob.checkMyScrumTeamHours(msg));
     
     if (openHours === 1) {
