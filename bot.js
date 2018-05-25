@@ -46,13 +46,12 @@ bot.onText(/\/check$/, async (msg, match) => {
     const info = emoji.get("information_source");
 
     let openHours = await (myScrumTeamJob.checkMyScrumTeamHours(msg));
-    
+
     if (openHours === 1) {
         bot.sendMessage(chatId, `${info} You have ${openHours} open workday in MyScrumTeam for this week.`);
     } else if (openHours > 1) {
         bot.sendMessage(chatId, `${info} You have ${openHours} open workdays in MyScrumTeam for this week.`);
-    }
-    else {
+    } else {
         bot.sendMessage(chatId, `${info} You have no open workdays in MyScrumTeam for this week.`);
     }
 });
@@ -112,13 +111,13 @@ function unsupportedParameterError(chatId, parameter, suggestion) {
     });
 }
 
-if (process.env.DEBUG_MODE == true) {
-    bot.on('message', (msg) => {
-        const chatId = msg.chat.id;
-        // send a message to the chat acknowledging receipt of their message
+bot.on('message', (msg) => {
+    const chatId = msg.chat.id;
+    // send a message to the chat acknowledging receipt of their message
+    if (process.env.DEBUG_MODE == true) {
         bot.sendMessage(chatId, 'Received your message:' + JSON.stringify(msg.from));
-    });
-}
+    }
+});
 
 /*
     Listen to emitted events.
