@@ -188,7 +188,7 @@ class MyScrumTeamJob {
 
   async markWorkingDayAsWorked(chatId) {
     const browser = await puppeteer.launch({
-      headless: true,
+      headless: false,
       args: [
         '--disable-setuid-sandbox',
         '--no-sandbox'
@@ -228,9 +228,11 @@ class MyScrumTeamJob {
         document.querySelector(SAVE_BUTTON_SELECTOR).click();
       });
 
+      await page.waitForSelector('body > div.sweet-alert.showSweetAlert.visible > div.sa-button-container > div > button');
+
       // confirm save
       await page.evaluate(() => {
-        const CONFIRM_SAVE_CHANGES_SELECTOR = 'button.confirm';
+        const CONFIRM_SAVE_CHANGES_SELECTOR = 'body > div.sweet-alert.showSweetAlert.visible > div.sa-button-container > div > button';
         document.querySelector(CONFIRM_SAVE_CHANGES_SELECTOR).click();
       });
 
