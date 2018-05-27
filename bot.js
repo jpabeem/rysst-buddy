@@ -30,7 +30,6 @@ bot.onText(/\/start$/, (msg, match) => {
 
 bot.onText(/\/overview$/, async (msg, match) => {
     const chatId = msg.chat.id;
-    const camera = emoji.get("camera");
     const image = await (myScrumTeamJob.getMyScrumTeamOverview(msg));
     bot.sendPhoto(msg.chat.id, image);
 });
@@ -39,7 +38,7 @@ bot.onText(/\/check$/, async (msg, match) => {
     const chatId = msg.chat.id;
     const info = emoji.get("information_source");
 
-    let openHours = await (myScrumTeamJob.checkMyScrumTeamHours(msg));
+    let openHours = await (myScrumTeamJob.checkMyScrumTeamHours(chatId));
 
     if (openHours === 1) {
         bot.sendMessage(chatId, `${info} You have ${openHours} open workday in MyScrumTeam for this week.`);
@@ -50,9 +49,24 @@ bot.onText(/\/check$/, async (msg, match) => {
     }
 });
 
+bot.onText(/\/approve$/, async (msg, match) => {
+    const chatId = msg.chat.id;
+    const info = emoji.get("information_source");
+    const bag = emoji.get("moneybag");
+
+    bot.sendChatAction(chatId, 'typing');
+
+    let workDay = await myScrumTeamJob.markWorkingDayAsWorked(chatId);
+
+    if (workDay != '') {
+        bot.sendMessage(chatId, `${bag} Your workday on ${workDay} was successfully marked as worked!`);
+    } else {
+        bot.sendMessage(chatId, `${info} Unable to mark working day as worked, please try again.`);
+    }
+});
+
 bot.onText(/\/sprint$/, async (msg, match) => {
     const chatId = msg.chat.id;
-    const camera = emoji.get("camera");
     const imagePath = await (myScrumTeamJob.getMyScrumTeamSprintHours(msg));
     bot.sendPhoto(msg.chat.id, imagePath);
 });
@@ -63,15 +77,9 @@ bot.onText(/\/planning ?(.+)?/, async (msg, match) => {
     match.filter((m) => {
         m !== undefined
     });
-    console.log("planning: " + match);
-    console.log(match.length);
-    console.log(match)
+    
     let planningOption = match[0].split(" ").length >= 2 ? match[1].split(" ")[0] : 'week';
     let planningAmount = match[0].split(" ").length > 2 ? match[0].split(" ")[2] : 0;
-    console.log(planningAmount);
-    console.log("Planning option: " + planningOption);
-    console.log("Planning option: " + planningAmount);
-    console.log(options.includes(planningOption));
 
     bot.sendChatAction(chatId, 'typing');
 
@@ -118,15 +126,19 @@ event.emitter.on('puppeteerEvent', async (update) => {
 });
 
 event.emitter.on('weeklyUpdateEvent', async (update) => {
-    const chatId = process.env.TELEGRAM_CHAT_ID;
+    const chatId = process.env.TELEGRAM_USER_ID;
     const info = emoji.get("information_source");
 
-    let openHours = await (myScrumTeamJob.checkMyScrumTeamHours(msg));
+    let openHours = await (myScrumTeamJob.checkMyScrumTeamHours(chatId));
 
     if (openHours === 1) {
-        bot.sendMessage(chatId, `${info} You have ${openHours} open workday in MyScrumTeam for this week.`);
+        bot.sendMessage(chatId, `${info} You have ${openHours} open workday in MyScrumTeam for this week. Type <code>/approve</code> to confirm your hours.`, message, {
+            parse_mode: "HTML"
+        });
     } else if (openHours > 1) {
-        bot.sendMessage(chatId, `${info} You have ${openHours} open workdays in MyScrumTeam for this week.`);
+        bot.sendMessage(chatId, `${info} You have ${openHours} open workdays in MyScrumTeam for this week. Type <code>/approve</code> to confirm your hours.`, message, {
+            parse_mode: "HTML"
+        });
     } else {
         bot.sendMessage(chatId, `${info} You have no open workdays in MyScrumTeam for this week.`);
     }

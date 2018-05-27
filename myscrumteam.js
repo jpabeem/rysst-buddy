@@ -24,6 +24,7 @@ class MyScrumTeamJob {
       ]
     });
     const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
     const date = new Date().getTime();
     const messageFromId = message.from.id;
     const screenshotPath = `./screenshots/${messageFromId}-${date}.png`;
@@ -143,7 +144,7 @@ class MyScrumTeamJob {
    * @param {any} message
    * @returns {string}
    */
-  async checkMyScrumTeamHours(message) {
+  async checkMyScrumTeamHours(chatId) {
     const browser = await puppeteer.launch({
       headless: true,
       args: [
@@ -154,8 +155,7 @@ class MyScrumTeamJob {
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
     const date = new Date().getTime();
-    const messageFromId = message.from.id;
-    const screenshotPath = `./screenshots/${messageFromId}-${date}.png`;
+    const screenshotPath = `./screenshots/${chatId}-${date}.png`;
     const uncheckedColor = 'rgb(230, 145, 56)';
     await this.logInToMyScrumTeam(browser, page);
     await page.goto('https://myscrum.team/nl/planning/overview', {
@@ -184,6 +184,72 @@ class MyScrumTeamJob {
       let dom = document.querySelector('body > div.app.header-blue.layout-fixed-header > div.sidebar-panel.offscreen-left.ps-container > nav > ul > li.menu-profile > div > span');
       dom.innerHTML = "RysstBuddy";
     });
+  }
+
+  async markWorkingDayAsWorked(chatId) {
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--disable-setuid-sandbox',
+        '--no-sandbox'
+      ]
+    });
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
+    const date = new Date().getTime();
+    const screenshotPath = `./screenshots/${chatId}-${date}.png`;
+
+    let workDayMarkedAsDone = '';
+
+    await this.logInToMyScrumTeam(browser, page);
+    await page.goto('https://myscrum.team/nl/planning/overview', {
+      waitUntil: "networkidle0"
+    });
+
+    try {
+      let selector = 'a';
+      await page.$$eval(selector, anchors => {
+        const uncheckedColor = 'rgb(230, 145, 56)';
+        anchors.map(anchor => {
+          if (anchor.style.backgroundColor === uncheckedColor) {
+            anchor.click();
+            return;
+          }
+        })
+      });
+
+      // modify the planned work item to 'worked'
+      await page.waitForSelector('#event-status');
+      await page.select('select#event-status', '1');
+
+      // save
+      await page.evaluate(() => {
+        const SAVE_BUTTON_SELECTOR = '#modal > div > div > div.modal-footer > button.btn.btn-primary.btn-shadow.ripple.confirm';
+        document.querySelector(SAVE_BUTTON_SELECTOR).click();
+      });
+
+      // confirm save
+      await page.evaluate(() => {
+        const CONFIRM_SAVE_CHANGES_SELECTOR = 'button.confirm';
+        document.querySelector(CONFIRM_SAVE_CHANGES_SELECTOR).click();
+      });
+
+      // get information on work day (date & time)
+      let content = await page.evaluate(() => {
+        let elements = [...document.querySelectorAll('input')];
+        return elements.filter(el => el.className === 'input__field')
+          .map(e => e.value.trim());
+      });
+
+      let date, fromTime, toTime;
+      [date, fromTime, toTime] = content;
+
+      workDayMarkedAsDone = `${date} (${fromTime} - ${toTime})`;
+    } catch (exception) {
+      console.log(exception);
+    }
+
+    return workDayMarkedAsDone;
   }
 
   /**

@@ -4,7 +4,7 @@ const schedule = require('node-schedule');
 /*
     Schedule a weekly message on Saturday @ 8 PM (20:00).
 */
-let weeklyMessage = schedule.scheduleJob('30 5 * * 6', () => {
+let weeklyMessage = schedule.scheduleJob('00 18:00 * * 6', () => {
   event.emitter.emit('weeklyUpdateEvent');
 });
 
