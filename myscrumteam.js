@@ -139,7 +139,7 @@ class MyScrumTeamJob {
 
   /**
    * Make a call to the MyScrum.team website
-   * and return the sprint hours for the team of the authenticated user.
+   * and check the open workdays of the authenticated user.
    *
    * @param {any} message
    * @returns {string}
@@ -154,16 +154,18 @@ class MyScrumTeamJob {
     });
     const page = await browser.newPage();
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
-    const date = new Date().getTime();
-    const screenshotPath = `./screenshots/${chatId}-${date}.png`;
-    const uncheckedColor = 'rgb(230, 145, 56)';
     await this.logInToMyScrumTeam(browser, page);
     await page.goto('https://myscrum.team/nl/planning/overview', {
       waitUntil: "networkidle0"
     });
 
+    return this.getPlannedHours(page);
+  }
+
+  async getPlannedHours(page) {
+    const uncheckedColor = 'rgb(230, 145, 56)';
+
     let content = await page.evaluate(() => {
-      // let elements = [...document.querySelectorAll('div.fc-event-container')];
       const elements = [...document.querySelectorAll('.fc-time-grid-event')];
       return elements.map(el => el.style.backgroundColor.trim());
     });
@@ -179,11 +181,135 @@ class MyScrumTeamJob {
     return uncheckedAmount;
   }
 
-  async injectRysstBuddy(page) {
-    await page.evaluate(() => {
-      let dom = document.querySelector('body > div.app.header-blue.layout-fixed-header > div.sidebar-panel.offscreen-left.ps-container > nav > ul > li.menu-profile > div > span');
-      dom.innerHTML = "RysstBuddy";
+  async checkAlreadyEntered(planningDay) {
+    const browser = await puppeteer.launch({
+      headless: false,
+      args: [
+        '--disable-setuid-sandbox',
+        '--no-sandbox'
+      ]
     });
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
+
+    await this.logInToMyScrumTeam(browser, page);
+    await page.goto('https://myscrum.team/nl/planning/overview', {
+      waitUntil: "networkidle0"
+    });
+
+    const NEXT_SELECTOR = ".fc-next-button";
+    const MARKED_COLORS = ['rgb(88, 168, 61)', 'rgb(230, 145, 56)'];
+
+    page.on('console', msg => {
+      for (let i = 0; i < msg.args.length; ++i)
+        console.log(`${i}: ${msg.args[i]}`);
+    });
+
+    // find the index
+    let index = undefined;
+    let attempts = 0;
+    while (index === undefined && attempts < 5) {
+      index = await page.evaluate((planningDay) => {
+        let elements = [...document.querySelectorAll('td')];
+        console.log(elements.filter(el => el.dataset.date === planningDay)[0]);
+        if (elements.filter(el => el.dataset.date === planningDay).length > 0) {
+          return elements.filter(el => el.dataset.date === planningDay)[0].cellIndex;
+        } else {
+          return undefined;
+        }
+      }, planningDay);
+
+      // switch to next week
+      if (index === undefined) {
+        await page.click(NEXT_SELECTOR);
+        await page.waitFor(500);
+        attempts++;
+      }
+    }
+
+    if (index === undefined) {
+      return;
+    }
+
+    console.log(index, attempts);
+
+    // find the TD
+    let alreadyEntered = await page.evaluate((index, MARKED_COLORS) => {
+      let elements = [...document.querySelectorAll('td:not([class])')];
+      let plannedMoments = elements[index - 1].querySelectorAll(".fc-event-container:not(.fc-helper-container)");
+      console.log(plannedMoments[0].children);
+      let bool = false;
+
+      [...plannedMoments[0].children].map(c => {
+        if (MARKED_COLORS.includes(c.style.backgroundColor)) {
+          bool = true;
+        }
+        console.log("contains color", MARKED_COLORS.includes(c.style.backgroundColor));
+      });
+
+      // return elements[index - 1];
+      return bool;
+      // return false;
+    }, index, MARKED_COLORS);
+
+    return alreadyEntered;
+  }
+
+  async planWorkingDay(chatId, planningDay) {
+    const browser = await puppeteer.launch({
+      headless: false,
+      args: [
+        '--disable-setuid-sandbox',
+        '--no-sandbox'
+      ]
+    });
+    const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
+
+    const NEXT_SELECTOR = ".fc-next-button";
+    const MARKED_COLORS = ['rgb(88, 168, 61)', 'rgb(230, 145, 56)'];
+
+    await this.logInToMyScrumTeam(browser, page);
+    await page.goto('https://myscrum.team/nl/planning/overview', {
+      waitUntil: "networkidle0"
+    });
+
+    // plan working day here
+    let index = undefined;
+    let attempts = 0;
+    while (index === undefined && attempts < 5) {
+      index = await page.evaluate((planningDay) => {
+        let elements = [...document.querySelectorAll('td')];
+        console.log(elements.filter(el => el.dataset.date === planningDay)[0]);
+        if (elements.filter(el => el.dataset.date === planningDay).length > 0) {
+          return elements.filter(el => el.dataset.date === planningDay)[0].cellIndex;
+        } else {
+          return undefined;
+        }
+      }, planningDay);
+
+      // switch to next week
+      if (index === undefined) {
+        await page.click(NEXT_SELECTOR);
+        await page.waitFor(500);
+        attempts++;
+      }
+    }
+
+    if (index === undefined) {
+      return;
+    }
+
+    console.log(index, attempts);
+
+    // find the TD and click on it
+    let alreadyEntered = await page.evaluate((index, MARKED_COLORS) => {
+      let elements = [...document.querySelectorAll('td:not([class])')];
+      let plannedMoments = [...elements[index - 1].querySelectorAll(".fc-event-container:not(.fc-helper-container)")];
+      console.log("click", plannedMoments);
+      plannedMoments.click();
+
+    }, index,);
   }
 
   async markWorkingDayAsWorked(chatId) {
@@ -252,6 +378,19 @@ class MyScrumTeamJob {
     }
 
     return workDayMarkedAsDone;
+  }
+
+  /**
+   * Inject the name 'RysstBuddy' into the DOM of the page where the name of the employee is located.
+   * Used as a watermark in several different methods, to denote the screenshot was taken by a bot.
+   * 
+   * @param {Page} page
+   */
+  async injectRysstBuddy(page) {
+    await page.evaluate(() => {
+      let dom = document.querySelector('body > div.app.header-blue.layout-fixed-header > div.sidebar-panel.offscreen-left.ps-container > nav > ul > li.menu-profile > div > span');
+      dom.innerHTML = "RysstBuddy";
+    });
   }
 
   /**
